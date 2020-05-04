@@ -1,4 +1,5 @@
 import 'package:clima/models/current_weather_entity.dart';
+import 'package:clima/screens/city_screen.dart';
 import 'package:clima/services/weather.dart';
 import 'package:clima/utilities/constants.dart';
 import 'package:flutter/material.dart';
@@ -16,13 +17,18 @@ class _LocationScreenState extends State<LocationScreen> {
   String cityName;
   String conditionIcon;
 
+  void updateUI(CurrentWeatherEntity currentWeather) {
+    setState(() {
+      temp = currentWeather.main.temp.truncate();
+      cityName = currentWeather.name;
+      conditionIcon = weather.getWeatherIcon(currentWeather.weather.first.id);
+    });
+  }
+
   @override
   void initState() {
     super.initState();
-    temp = widget.currentWeather.main.temp.truncate();
-    cityName = widget.currentWeather.name;
-    conditionIcon =
-        weather.getWeatherIcon(widget.currentWeather.weather.first.id);
+    updateUI(this.widget.currentWeather);
   }
 
   @override
@@ -47,14 +53,29 @@ class _LocationScreenState extends State<LocationScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: <Widget>[
                   FlatButton(
-                    onPressed: () {},
+                    onPressed: () {
+                      weather
+                          .getCurrentWeatherForCurrentPosition()
+                          .then(updateUI);
+                    },
                     child: Icon(
                       Icons.near_me,
                       size: 50.0,
                     ),
                   ),
                   FlatButton(
-                    onPressed: () {},
+                    onPressed: () async {
+                      String city = await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => CityScreen(),
+                        ),
+                      );
+                      if (null != city) {
+                        updateUI(
+                            await weather.getCurrentWeatherForCityName(city));
+                      }
+                    },
                     child: Icon(
                       Icons.location_city,
                       size: 50.0,

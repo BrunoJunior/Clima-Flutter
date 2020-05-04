@@ -1,10 +1,9 @@
 import 'package:clima/models/current_weather_entity.dart';
+import 'package:clima/screens/error_screen.dart';
 import 'package:clima/screens/location_screen.dart';
-import 'package:clima/services/location.dart';
 import 'package:clima/services/weather.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
-import 'package:geolocator/geolocator.dart';
 
 class LoadingScreen extends StatefulWidget {
   @override
@@ -19,14 +18,16 @@ class _LoadingScreenState extends State<LoadingScreen> {
   }
 
   void getLocationData() async {
-    Position position = await Location().getCurrentLocation();
-    CurrentWeatherEntity cur = await WeatherModel().getCurrentWeather(position);
-    Navigator.push(
-        context,
-        MaterialPageRoute(
-            builder: (context) => LocationScreen(
-                  currentWeather: cur,
-                )));
+    StatefulWidget screen;
+    try {
+      CurrentWeatherEntity cur =
+          await WeatherModel().getCurrentWeatherForCurrentPosition();
+      screen = LocationScreen(currentWeather: cur);
+    } catch (ex) {
+      screen = ErrorScreen(ex);
+    }
+    Navigator.push(context, MaterialPageRoute(builder: (context) => screen))
+        .then((val) => getLocationData());
   }
 
   @override
